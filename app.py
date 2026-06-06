@@ -9,7 +9,7 @@ from database import db, init_db
 from models import Product, Category, Order, OrderItem, User
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = os.environ.get("SECRET_KEY", "baotran110")
 
 # Database config
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
