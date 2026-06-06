@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Menu — SipCo{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <!-- Page Header -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="section-title">Our Menu</h1>
+      <p class="text-muted mt-2 mb-0" style="font-size:0.9rem;">
+        {{ products|length }} drink{{ 's' if products|length != 1 }} available
+        {% if search %} for "<strong>{{ search }}</strong>"{% endif %}
+      </p>
+    </div>
+
+    <!-- Search -->
+    <form method="GET" action="{{ url_for('menu') }}" class="search-box">
+      <i class="bi bi-search search-icon"></i>
+      <input type="text" id="menu-search" name="q" class="form-control"
+             placeholder="Search drinks…" value="{{ search }}">
+      {% if active_cat %}
+        <input type="hidden" name="category" value="{{ active_cat }}">
+      {% endif %}
+    </form>
+  </div>
+
+  <!-- Category Pills -->
+  <div class="cat-pills">
+    <a href="{{ url_for('menu', q=search) }}"
+       class="cat-pill {% if not active_cat %}active{% endif %}">
+      🍹 All
+    </a>
+    {% for cat in categories %}
+    <a href="{{ url_for('menu', category=cat.id, q=search) }}"
+       class="cat-pill {% if active_cat == cat.id %}active{% endif %}">
+      {{ cat.icon }} {{ cat.name }}
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Products Grid -->
+  {% if products %}
+  <div class="row g-4">
+    {% for p in products %}
+    <div class="col-sm-6 col-md-4 col-lg-3">
+      <div class="product-card">
+        <a href="{{ url_for('product_detail', pid=p.id) }}" class="text-decoration-none">
+          <div class="product-img-wrap">
+            <img src="{{ p.image_url or 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&q=80' }}"
+                 alt="{{ p.name }}" loading="lazy">
+            {% if p.is_featured %}
+              <span class="product-badge">⭐ Popular</span>
+            {% endif %}
+          </div>
+        </a>
+        <div class="product-body">
+          <a href="{{ url_for('product_detail', pid=p.id) }}" class="text-decoration-none">
+            <div class="product-name" style="color:var(--dark);">{{ p.name }}</div>
+          </a>
+          <div class="product-desc">{{ p.description }}</div>
+          <div class="product-footer">
+            <span class="product-price">${{ '%.2f'|format(p.price) }}</span>
+            <form action="{{ url_for('add_to_cart') }}" method="POST">
+              <input type="hidden" name="product_id" value="{{ p.id }}">
+              <input type="hidden" name="qty" value="1">
+              <button type="submit" class="btn-primary-custom" style="padding:0.45rem 1rem;font-size:0.85rem;">
+                <i class="bi bi-cart-plus"></i> Add
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">🔍</div>
+    <h4>No drinks found</h4>
+    <p>Try a different search or category.</p>
+    <a href="{{ url_for('menu') }}" class="btn-primary-custom mt-3">Clear Filters</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

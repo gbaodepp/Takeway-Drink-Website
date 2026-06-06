@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Orders — SipCo Admin{% endblock %}
+
+{% block content %}
+<div class="admin-wrapper">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      <h5>☕ SipCo Admin</h5>
+      <p>👤 {{ session.username }}</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('admin_dashboard') }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="{{ url_for('admin_orders') }}" class="active"><i class="bi bi-receipt"></i> Orders</a>
+      <a href="{{ url_for('admin_products') }}"><i class="bi bi-cup-hot"></i> Products</a>
+      <a href="{{ url_for('menu') }}" target="_blank"><i class="bi bi-eye"></i> View Store</a>
+      <a href="{{ url_for('logout') }}" style="border-top:1px solid rgba(255,255,255,0.1);">
+        <i class="bi bi-box-arrow-right"></i> Logout
+      </a>
+    </nav>
+  </aside>
+
+  <main class="admin-content">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h2 style="font-weight:800;color:var(--dark);margin:0;">Orders</h2>
+        <p class="text-muted mb-0" style="font-size:0.88rem;">
+          {{ orders|length }} order{{ 's' if orders|length != 1 }}
+          {% if status_filter %}with status "<strong>{{ status_filter }}</strong>"{% endif %}
+        </p>
+      </div>
+    </div>
+
+    <!-- Status Filter Tabs -->
+    <div class="cat-pills mb-4">
+      <a href="{{ url_for('admin_orders') }}"
+         class="cat-pill {% if not status_filter %}active{% endif %}">
+        All
+      </a>
+      {% for s, icon in [('pending','⏳'),('preparing','🔥'),('ready','✅'),('completed','🎉'),('cancelled','❌')] %}
+      <a href="{{ url_for('admin_orders', status=s) }}"
+         class="cat-pill {% if status_filter == s %}active{% endif %}">
+        {{ icon }} {{ s|title }}
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- Orders Table -->
+    {% if orders %}
+    <div class="orders-table" style="overflow-x:auto;">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Customer</th>
+            <th>Phone</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Pickup</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+          <tr>
+            <td><strong>#{{ order.id }}</strong></td>
+            <td>{{ order.customer_name }}</td>
+            <td>{{ order.customer_phone }}</td>
+            <td style="font-size:0.85rem;">{{ order.items|length }} item{{ 's' if order.items|length != 1 }}</td>
+            <td style="font-weight:700;color:var(--primary);">${{ '%.2f'|format(order.total_price) }}</td>
+            <td style="font-size:0.83rem;">{{ order.pickup_time or 'ASAP' }}</td>
+            <td>
+              <span class="badge-status {{ order.status }}">
+                {{ order.status_icon }} {{ order.status|title }}
+              </span>
+            </td>
+            <td style="font-size:0.82rem;color:var(--text-muted);white-space:nowrap;">
+              {{ order.created_at.strftime('%d %b %H:%M') }}
+            </td>
+            <td>
+              <div class="d-flex gap-1">
+                <a href="{{ url_for('admin_order_detail', oid=order.id) }}"
+                   class="btn btn-sm" style="background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:0.3rem 0.6rem;"
+                   title="View Details">
+                  <i class="bi bi-eye" style="color:var(--info);"></i>
+                </a>
+                <!-- Quick status update -->
+                <div class="dropdown">
+                  <button class="btn btn-sm dropdown-toggle"
+                          style="background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:0.3rem 0.6rem;font-size:0.8rem;"
+                          data-bs-toggle="dropdown">
+                    Update
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    {% for s, icon in [('pending','⏳'),('preparing','🔥'),('ready','✅'),('completed','🎉'),('cancelled','❌')] %}
+                    <li>
+                      <form method="POST" action="{{ url_for('update_order_status', oid=order.id) }}">
+                        <input type="hidden" name="status" value="{{ s }}">
+                        <button type="submit" class="dropdown-item {% if order.status == s %}fw-bold{% endif %}">
+                          {{ icon }} {{ s|title }}
+                        </button>
+                      </form>
+                    </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <h4>No orders found</h4>
+      <p>{% if status_filter %}No {{ status_filter }} orders at the moment.{% else %}Orders will appear here.{% endif %}</p>
+      {% if status_filter %}
+      <a href="{{ url_for('admin_orders') }}" class="btn-outline-custom mt-3">Clear Filter</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </main>
+</div>
+{% endblock %}

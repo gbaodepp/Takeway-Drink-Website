@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}SipCo — Premium Takeaway Drinks{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero ──────────────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6 hero-content">
+        <div class="hero-badge">
+          <span>🔥</span> Fresh Made Daily
+        </div>
+        <h1>
+          Your Perfect<br>
+          <span>Sip Awaits</span><br>
+          You Here
+        </h1>
+        <p>Handcrafted drinks made to order. Pick up in minutes — no waiting, just great taste.</p>
+        <div class="d-flex flex-wrap gap-3">
+          <a href="{{ url_for('menu') }}" class="btn-primary-custom" style="padding:0.85rem 2rem;font-size:1rem;">
+            <i class="bi bi-cup-hot"></i> Browse Menu
+          </a>
+          <a href="{{ url_for('track_order') }}" class="btn-outline-custom" style="padding:0.85rem 2rem;font-size:1rem;color:#fff;border-color:rgba(255,255,255,0.5);">
+            <i class="bi bi-search"></i> Track Order
+          </a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat">
+            <span class="stat-num">50+</span>
+            <span class="stat-lbl">Drinks</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">5⭐</span>
+            <span class="stat-lbl">Rating</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">10min</span>
+            <span class="stat-lbl">Avg. Pickup</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 text-center hero-image-col d-none d-lg-block">
+        <div class="hero-img-wrap">
+          <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&q=80"
+               alt="Drinks hero"
+               style="width:380px;height:420px;object-fit:cover;border-radius:30px 30px 120px 30px;box-shadow:0 30px 80px rgba(0,0,0,0.5);">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Categories Strip ──────────────────────────────────────────────────── -->
+<section class="py-5 bg-white">
+  <div class="container">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h2 class="section-title">Categories</h2>
+      <a href="{{ url_for('menu') }}" class="btn-outline-custom" style="padding:0.4rem 1rem;font-size:0.85rem;">View All</a>
+    </div>
+    <div class="row g-3">
+      {% for cat in categories %}
+      <div class="col-6 col-sm-4 col-md-2">
+        <a href="{{ url_for('menu', category=cat.id) }}"
+           class="d-block text-center p-3 rounded-custom border bg-white text-decoration-none"
+           style="transition:all 0.25s ease;border-color:var(--border)!important;"
+           onmouseover="this.style.transform='translateY(-4px)';this.style.borderColor='var(--primary)!important';this.style.boxShadow='0 8px 24px rgba(255,107,53,0.18)'"
+           onmouseout="this.style.transform='';this.style.borderColor='';this.style.boxShadow=''">
+          <div style="font-size:2.2rem;margin-bottom:0.5rem;">{{ cat.icon }}</div>
+          <div style="font-weight:700;font-size:0.88rem;color:var(--dark);">{{ cat.name }}</div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ── Featured Drinks ───────────────────────────────────────────────────── -->
+<section class="py-5">
+  <div class="container">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h2 class="section-title">Featured Drinks</h2>
+        <p class="text-muted mt-2 mb-0" style="font-size:0.9rem;">Handpicked bestsellers you'll love</p>
+      </div>
+      <a href="{{ url_for('menu') }}" class="btn-outline-custom" style="padding:0.5rem 1.2rem;font-size:0.88rem;">
+        See All <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+    <div class="row g-4">
+      {% for p in featured %}
+      <div class="col-sm-6 col-md-4 col-xl-4">
+        <div class="product-card">
+          <div class="product-img-wrap">
+            <img src="{{ p.image_url or 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&q=80' }}"
+                 alt="{{ p.name }}">
+            <span class="product-badge">⭐ Featured</span>
+          </div>
+          <div class="product-body">
+            <div class="product-name">{{ p.name }}</div>
+            <div class="product-desc">{{ p.description }}</div>
+            <div class="product-footer">
+              <span class="product-price">${{ '%.2f'|format(p.price) }}</span>
+              <div class="d-flex gap-2">
+                <a href="{{ url_for('product_detail', pid=p.id) }}" class="btn-outline-custom" style="padding:0.4rem 0.8rem;font-size:0.8rem;">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <form action="{{ url_for('add_to_cart') }}" method="POST" class="d-inline">
+                  <input type="hidden" name="product_id" value="{{ p.id }}">
+                  <input type="hidden" name="qty" value="1">
+                  <button type="submit" class="btn-primary-custom" style="padding:0.4rem 0.9rem;font-size:0.8rem;">
+                    <i class="bi bi-plus-lg"></i> Add
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ── How It Works ──────────────────────────────────────────────────────── -->
+<section class="py-5 bg-white">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="section-title" style="display:block;text-align:center;">How It Works</h2>
+      <p class="text-muted mt-3">Three easy steps to your perfect drink</p>
+    </div>
+    <div class="row g-4 text-center">
+      {% for step in [
+        ('🛒','1. Browse & Add','Explore our full menu and add your favourite drinks to the cart.'),
+        ('✍️','2. Checkout','Enter your name and phone number — no account needed!'),
+        ('⚡','3. Pick Up','Get notified when your order is ready. Walk in and grab it.')
+      ] %}
+      <div class="col-md-4">
+        <div style="background:linear-gradient(135deg,var(--dark),var(--dark-3));border-radius:var(--radius);padding:2.5rem 1.5rem;height:100%;color:#fff;transition:var(--transition);"
+             onmouseover="this.style.transform='translateY(-6px)'"
+             onmouseout="this.style.transform=''">
+          <div style="font-size:3rem;margin-bottom:1rem;">{{ step[0] }}</div>
+          <h5 style="font-weight:700;color:var(--accent);margin-bottom:0.75rem;">{{ step[1] }}</h5>
+          <p style="color:rgba(255,255,255,0.7);font-size:0.9rem;margin:0;">{{ step[2] }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA Banner ────────────────────────────────────────────────────────── -->
+<section style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));padding:4rem 0;">
+  <div class="container text-center" style="color:#fff;">
+    <h2 style="font-family:'Playfair Display',serif;font-size:2.2rem;margin-bottom:1rem;">Ready to Order?</h2>
+    <p style="opacity:0.9;font-size:1.05rem;margin-bottom:2rem;">Browse our full menu and get your perfect drink in minutes.</p>
+    <a href="{{ url_for('menu') }}" class="btn-dark-custom" style="font-size:1rem;">
+      <i class="bi bi-cup-hot"></i> View Full Menu
+    </a>
+  </div>
+</section>
+
+{% endblock %}

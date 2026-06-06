@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Checkout — SipCo{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:900px;">
+
+  <!-- Steps -->
+  <div class="step-indicator">
+    <div class="step done">
+      <div class="step-num">✓</div>
+      <div class="step-label">Cart</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step active">
+      <div class="step-num">2</div>
+      <div class="step-label">Details</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-label">Confirm</div>
+    </div>
+  </div>
+
+  <div class="row g-4 align-items-start">
+
+    <!-- Form -->
+    <div class="col-lg-7">
+      <div class="form-card">
+        <h4 style="font-weight:800;margin-bottom:1.5rem;color:var(--dark);">
+          <i class="bi bi-person-lines-fill me-2" style="color:var(--primary);"></i>Your Details
+        </h4>
+
+        <form method="POST" action="{{ url_for('checkout') }}" id="checkout-form">
+          <div class="row g-3">
+
+            <div class="col-12">
+              <label class="form-label" for="name">Full Name <span class="text-danger">*</span></label>
+              <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Alex Nguyen" required
+                value="{{ request.form.get('name','') }}">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="phone">Phone Number <span class="text-danger">*</span></label>
+              <input type="tel" id="phone" name="phone" class="form-control" placeholder="e.g. 0900 000 000" required
+                value="{{ request.form.get('phone','') }}">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="email">Email (optional)</label>
+              <input type="email" id="email" name="email" class="form-control" placeholder="you@email.com"
+                value="{{ request.form.get('email','') }}">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label" for="pickup_time">Preferred Pickup Time</label>
+              <select id="pickup_time" name="pickup_time" class="form-select">
+                <option value="">As soon as possible</option>
+                <option value="15 mins">In ~15 minutes</option>
+                <option value="30 mins">In ~30 minutes</option>
+                <option value="1 hour">In ~1 hour</option>
+                <option value="Custom">I'll call ahead</option>
+              </select>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label" for="notes">Special Requests</label>
+              <textarea id="notes" name="notes" class="form-control" rows="3"
+                placeholder="e.g. less sugar, extra ice, oat milk…">{{ request.form.get('notes','') }}</textarea>
+            </div>
+
+          </div>
+
+          <div class="mt-4 pt-2 border-top">
+            <div class="d-flex justify-content-between align-items-center">
+              <a href="{{ url_for('cart') }}" class="btn-outline-custom" style="padding:0.6rem 1.2rem;">
+                <i class="bi bi-arrow-left me-1"></i> Back
+              </a>
+              <button type="submit" class="btn-primary-custom" style="padding:0.75rem 2rem;font-size:1rem;">
+                <i class="bi bi-check2-circle me-1"></i> Place Order
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="col-lg-5">
+      <div class="cart-summary">
+        <h5 style="font-weight:800;margin-bottom:1.5rem;">Order Summary</h5>
+
+        {% for pid, item in cart.items() %}
+        <div class="d-flex justify-content-between align-items-center mb-2" style="font-size:0.88rem;">
+          <span>
+            <span
+              style="background:var(--primary);color:#fff;border-radius:50px;padding:0.1rem 0.5rem;font-size:0.72rem;font-weight:700;margin-right:0.4rem;">{{
+              item.qty }}</span>
+            {{ item.name }}
+          </span>
+          <span style="font-weight:600;">${{ '%.2f'|format(item.price * item.qty) }}</span>
+        </div>
+        {% endfor %}
+
+        <div class="summary-row total mt-3">
+          <span>Total</span>
+          <span>${{ '%.2f'|format(cart_total()) }}</span>
+        </div>
+
+        <div
+          style="background:var(--surface-2);border-radius:var(--radius-sm);padding:1rem;margin-top:1rem;font-size:0.83rem;color:var(--text-muted);">
+          <i class="bi bi-info-circle me-1"></i>
+          Payment is collected <strong>at pickup</strong>. We accept cash and card.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

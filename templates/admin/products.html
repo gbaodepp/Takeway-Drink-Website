@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Products — SipCo Admin{% endblock %}
+
+{% block content %}
+<div class="admin-wrapper">
+
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      <h5>☕ SipCo Admin</h5>
+      <p>👤 {{ session.username }}</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('admin_dashboard') }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="{{ url_for('admin_orders') }}"><i class="bi bi-receipt"></i> Orders</a>
+      <a href="{{ url_for('admin_products') }}" class="active"><i class="bi bi-cup-hot"></i> Products</a>
+      <a href="{{ url_for('menu') }}" target="_blank"><i class="bi bi-eye"></i> View Store</a>
+      <a href="{{ url_for('logout') }}" style="border-top:1px solid rgba(255,255,255,0.1);">
+        <i class="bi bi-box-arrow-right"></i> Logout
+      </a>
+    </nav>
+  </aside>
+
+  <main class="admin-content">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h2 style="font-weight:800;color:var(--dark);margin:0;">Products</h2>
+        <p class="text-muted mb-0" style="font-size:0.88rem;">{{ products|length }} products in catalogue</p>
+      </div>
+      <a href="{{ url_for('admin_add_product') }}" class="btn-primary-custom" style="padding:0.6rem 1.3rem;">
+        <i class="bi bi-plus-lg me-1"></i> Add Product
+      </a>
+    </div>
+
+    <!-- Category grouping -->
+    {% set ns = namespace(current_cat='') %}
+    {% for cat in categories %}
+      {% set cat_products = products | selectattr('category_id', 'equalto', cat.id) | list %}
+      {% if cat_products %}
+      <div class="mb-4">
+        <h5 style="font-weight:800;color:var(--dark);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
+          {{ cat.icon }} {{ cat.name }}
+          <span style="background:var(--surface-2);border:1px solid var(--border);border-radius:50px;padding:0.1rem 0.6rem;font-size:0.75rem;color:var(--text-muted);">
+            {{ cat_products|length }}
+          </span>
+        </h5>
+        <div style="background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;">
+          <table class="orders-table table mb-0">
+            <thead>
+              <tr>
+                <th style="width:60px;"></th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Featured</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in cat_products %}
+              <tr>
+                <td>
+                  {% if p.image_url %}
+                  <img src="{{ p.image_url }}" alt="{{ p.name }}"
+                       style="width:48px;height:48px;object-fit:cover;border-radius:8px;">
+                  {% else %}
+                  <div style="width:48px;height:48px;background:var(--surface-2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;">
+                    {{ cat.icon }}
+                  </div>
+                  {% endif %}
+                </td>
+                <td>
+                  <strong>{{ p.name }}</strong>
+                  <div style="font-size:0.78rem;color:var(--text-muted);max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    {{ p.description }}
+                  </div>
+                </td>
+                <td style="font-weight:700;color:var(--primary);">${{ '%.2f'|format(p.price) }}</td>
+                <td>
+                  <form method="POST" action="{{ url_for('toggle_product', pid=p.id) }}" style="display:inline;">
+                    <button type="submit"
+                            class="badge-status {{ 'completed' if p.is_available else 'cancelled' }}"
+                            style="border:none;cursor:pointer;"
+                            title="Click to toggle">
+                      {% if p.is_available %}✅ Available{% else %}❌ Hidden{% endif %}
+                    </button>
+                  </form>
+                </td>
+                <td>
+                  {% if p.is_featured %}
+                    <span class="badge-status pending">⭐ Yes</span>
+                  {% else %}
+                    <span style="color:var(--text-muted);font-size:0.85rem;">—</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="d-flex gap-1">
+                    <a href="{{ url_for('admin_edit_product', pid=p.id) }}"
+                       class="btn btn-sm"
+                       style="background:rgba(17,138,178,0.1);border:1px solid rgba(17,138,178,0.3);border-radius:6px;padding:0.3rem 0.7rem;"
+                       title="Edit">
+                      <i class="bi bi-pencil" style="color:var(--info);"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('admin_delete_product', pid=p.id) }}"
+                          onsubmit="return confirm('Delete {{ p.name }}? This cannot be undone.')">
+                      <button type="submit" class="btn btn-sm"
+                              style="background:rgba(239,71,111,0.1);border:1px solid rgba(239,71,111,0.3);border-radius:6px;padding:0.3rem 0.7rem;"
+                              title="Delete">
+                        <i class="bi bi-trash3" style="color:var(--danger);"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    {% endfor %}
+
+    {% if not products %}
+    <div class="empty-state">
+      <div class="empty-icon">☕</div>
+      <h4>No products yet</h4>
+      <p>Add your first drink to get started.</p>
+      <a href="{{ url_for('admin_add_product') }}" class="btn-primary-custom mt-3">+ Add Product</a>
+    </div>
+    {% endif %}
+
+  </main>
+</div>
+{% endblock %}

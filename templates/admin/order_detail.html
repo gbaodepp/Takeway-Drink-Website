@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Order #{{ order.id }} — SipCo Admin{% endblock %}
+
+{% block content %}
+<div class="admin-wrapper">
+
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      <h5>☕ SipCo Admin</h5>
+      <p>👤 {{ session.username }}</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('admin_dashboard') }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="{{ url_for('admin_orders') }}" class="active"><i class="bi bi-receipt"></i> Orders</a>
+      <a href="{{ url_for('admin_products') }}"><i class="bi bi-cup-hot"></i> Products</a>
+      <a href="{{ url_for('menu') }}" target="_blank"><i class="bi bi-eye"></i> View Store</a>
+      <a href="{{ url_for('logout') }}" style="border-top:1px solid rgba(255,255,255,0.1);">
+        <i class="bi bi-box-arrow-right"></i> Logout
+      </a>
+    </nav>
+  </aside>
+
+  <main class="admin-content">
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <a href="{{ url_for('admin_orders') }}" class="btn btn-sm" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.8rem;">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+      <div>
+        <h2 style="font-weight:800;color:var(--dark);margin:0;">Order #{{ order.id }}</h2>
+        <p class="text-muted mb-0" style="font-size:0.85rem;">{{ order.created_at.strftime('%A, %d %B %Y at %I:%M %p') }}</p>
+      </div>
+      <span class="badge-status {{ order.status }} ms-auto" style="font-size:0.9rem;padding:0.5rem 1.1rem;">
+        {{ order.status_icon }} {{ order.status|title }}
+      </span>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- Left: Items + Notes -->
+      <div class="col-lg-7">
+
+        <!-- Items -->
+        <div class="form-card mb-4">
+          <h6 style="font-weight:800;margin-bottom:1.2rem;color:var(--dark);">
+            <i class="bi bi-cup me-2" style="color:var(--primary);"></i>Items Ordered
+          </h6>
+          {% for item in order.items %}
+          <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+            <div>
+              <strong>{{ item.product_name }}</strong>
+              <span class="text-muted ms-2" style="font-size:0.85rem;">× {{ item.qty }}</span>
+            </div>
+            <div class="text-end">
+              <div style="font-weight:700;color:var(--primary);">${{ '%.2f'|format(item.subtotal) }}</div>
+              <div style="font-size:0.78rem;color:var(--text-muted);">${{ '%.2f'|format(item.price) }} each</div>
+            </div>
+          </div>
+          {% endfor %}
+          <div class="d-flex justify-content-between mt-3 pt-2 border-top">
+            <strong style="font-size:1.05rem;">Order Total</strong>
+            <strong style="font-size:1.3rem;color:var(--primary);">${{ '%.2f'|format(order.total_price) }}</strong>
+          </div>
+        </div>
+
+        {% if order.notes %}
+        <div class="form-card mb-4">
+          <h6 style="font-weight:800;margin-bottom:0.75rem;color:var(--dark);">
+            <i class="bi bi-chat-left-text me-2" style="color:var(--primary);"></i>Special Requests
+          </h6>
+          <div style="background:rgba(255,209,102,0.12);border-left:3px solid var(--accent);padding:0.8rem 1rem;border-radius:0 8px 8px 0;">
+            {{ order.notes }}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Status Timeline -->
+        <div class="form-card">
+          <h6 style="font-weight:800;margin-bottom:1.5rem;color:var(--dark);">
+            <i class="bi bi-clock-history me-2" style="color:var(--primary);"></i>Order Progress
+          </h6>
+          <div class="status-timeline">
+            {% set steps = [
+              ('pending',   '📋', 'Order Received',   'Order successfully placed by customer.'),
+              ('preparing', '🔥', 'Being Prepared',   'Team is crafting the drinks.'),
+              ('ready',     '✅', 'Ready for Pickup',  'Drinks are ready at the counter.'),
+              ('completed', '🎉', 'Completed',          'Order picked up by customer.')
+            ] %}
+            {% set statuses = ['pending','preparing','ready','completed'] %}
+            {% set current_idx = statuses.index(order.status) if order.status in statuses else -1 %}
+            {% for status, icon, label, desc in steps %}
+            {% set idx = loop.index0 %}
+            <div class="status-step">
+              <div class="status-icon {% if idx < current_idx %}done{% elif idx == current_idx %}active{% endif %}">
+                {{ icon }}
+              </div>
+              <div class="status-content">
+                <h6 style="{% if idx == current_idx %}color:var(--primary);{% elif idx < current_idx %}color:var(--success);{% else %}color:var(--text-muted);{% endif %}">
+                  {{ label }}
+                </h6>
+                <p>{{ desc }}</p>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right: Customer + Update Status -->
+      <div class="col-lg-5">
+
+        <!-- Customer Info -->
+        <div class="form-card mb-4">
+          <h6 style="font-weight:800;margin-bottom:1.2rem;color:var(--dark);">
+            <i class="bi bi-person me-2" style="color:var(--primary);"></i>Customer Details
+          </h6>
+          <table class="table table-borderless mb-0" style="font-size:0.9rem;">
+            <tr>
+              <td class="text-muted fw-600 ps-0" style="width:40%;font-weight:600;">Name</td>
+              <td class="fw-bold">{{ order.customer_name }}</td>
+            </tr>
+            <tr>
+              <td class="text-muted fw-600 ps-0" style="font-weight:600;">Phone</td>
+              <td><a href="tel:{{ order.customer_phone }}">{{ order.customer_phone }}</a></td>
+            </tr>
+            {% if order.customer_email %}
+            <tr>
+              <td class="text-muted fw-600 ps-0" style="font-weight:600;">Email</td>
+              <td>{{ order.customer_email }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+              <td class="text-muted fw-600 ps-0" style="font-weight:600;">Pickup</td>
+              <td>{{ order.pickup_time or 'As soon as possible' }}</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Update Status -->
+        <div class="form-card">
+          <h6 style="font-weight:800;margin-bottom:1.2rem;color:var(--dark);">
+            <i class="bi bi-arrow-repeat me-2" style="color:var(--primary);"></i>Update Status
+          </h6>
+          <form method="POST" action="{{ url_for('update_order_status', oid=order.id) }}">
+            <div class="mb-3">
+              <label class="form-label" for="status-select">New Status</label>
+              <select id="status-select" name="status" class="form-select">
+                {% for s, icon in [('pending','⏳'),('preparing','🔥'),('ready','✅'),('completed','🎉'),('cancelled','❌')] %}
+                <option value="{{ s }}" {% if order.status == s %}selected{% endif %}>
+                  {{ icon }} {{ s|title }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="mb-3">
+              <span id="status-preview" class="badge-status {{ order.status }}">
+                {{ order.status }}
+              </span>
+            </div>
+            <button type="submit" class="btn-primary-custom w-100 justify-content-center" style="padding:0.7rem;">
+              <i class="bi bi-check2 me-1"></i> Save Status
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

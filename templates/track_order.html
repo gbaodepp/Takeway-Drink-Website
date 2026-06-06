@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Track Order — SipCo{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:600px;">
+  <div class="text-center mb-5">
+    <div style="font-size:3.5rem;margin-bottom:0.75rem;">🔍</div>
+    <h1 style="font-family:'Playfair Display',serif;font-size:2rem;color:var(--dark);">Track Your Order</h1>
+    <p class="text-muted">Enter your Order ID and phone number to see the status.</p>
+  </div>
+
+  <div class="form-card mb-5">
+    <form method="POST" action="{{ url_for('track_order') }}">
+      <div class="row g-3">
+        <div class="col-md-5">
+          <label class="form-label" for="order_id">Order ID</label>
+          <input type="number" id="order_id" name="order_id" class="form-control"
+                 placeholder="e.g. 42" required min="1">
+        </div>
+        <div class="col-md-7">
+          <label class="form-label" for="phone">Phone Number</label>
+          <input type="tel" id="phone" name="phone" class="form-control"
+                 placeholder="Number used at checkout" required>
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn-primary-custom w-100 justify-content-center" style="padding:0.75rem;font-size:1rem;">
+            <i class="bi bi-search me-1"></i> Track Order
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  {% if order %}
+  <!-- Result -->
+  <div class="order-summary-box mb-4">
+    <div class="row g-3">
+      <div class="col-6">
+        <div class="lbl">Order #</div>
+        <div class="val">#{{ order.id }}</div>
+      </div>
+      <div class="col-6">
+        <div class="lbl">Status</div>
+        <div class="val">{{ order.status_icon }} {{ order.status|title }}</div>
+      </div>
+      <div class="col-6">
+        <div class="lbl">Name</div>
+        <div class="val">{{ order.customer_name }}</div>
+      </div>
+      <div class="col-6">
+        <div class="lbl">Pickup</div>
+        <div class="val">{{ order.pickup_time or 'ASAP' }}</div>
+      </div>
+      <div class="col-12">
+        <div class="lbl">Total</div>
+        <div class="val">${{ '%.2f'|format(order.total_price) }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Items -->
+  <div class="form-card mb-4">
+    <h6 style="font-weight:800;margin-bottom:1rem;">Items</h6>
+    {% for item in order.items %}
+    <div class="d-flex justify-content-between py-2 border-bottom">
+      <span>{{ item.product_name }} × {{ item.qty }}</span>
+      <span style="font-weight:700;color:var(--primary);">${{ '%.2f'|format(item.subtotal) }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Status Timeline -->
+  <div class="form-card">
+    <h6 style="font-weight:800;margin-bottom:1.5rem;">Order Progress</h6>
+    <div class="status-timeline">
+      {% set steps = [
+        ('pending',   '📋', 'Order Received'),
+        ('preparing', '🔥', 'Being Prepared'),
+        ('ready',     '✅', 'Ready for Pickup'),
+        ('completed', '🎉', 'Completed')
+      ] %}
+      {% set statuses = ['pending','preparing','ready','completed'] %}
+      {% set current_idx = statuses.index(order.status) if order.status in statuses else -1 %}
+      {% for status, icon, label in steps %}
+      {% set idx = loop.index0 %}
+      <div class="status-step">
+        <div class="status-icon {% if idx < current_idx %}done{% elif idx == current_idx %}active{% endif %}">
+          {{ icon }}
+        </div>
+        <div class="status-content">
+          <h6 style="{% if idx == current_idx %}color:var(--primary);{% elif idx < current_idx %}color:var(--success);{% else %}color:var(--text-muted);{% endif %}">
+            {{ label }}
+          </h6>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

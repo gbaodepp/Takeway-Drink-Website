@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}{% if product %}Edit {{ product.name }}{% else %}Add Product{% endif %} — SipCo Admin{% endblock %}
+
+{% block content %}
+<div class="admin-wrapper">
+
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      <h5>☕ SipCo Admin</h5>
+      <p>👤 {{ session.username }}</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('admin_dashboard') }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="{{ url_for('admin_orders') }}"><i class="bi bi-receipt"></i> Orders</a>
+      <a href="{{ url_for('admin_products') }}" class="active"><i class="bi bi-cup-hot"></i> Products</a>
+      <a href="{{ url_for('menu') }}" target="_blank"><i class="bi bi-eye"></i> View Store</a>
+      <a href="{{ url_for('logout') }}" style="border-top:1px solid rgba(255,255,255,0.1);">
+        <i class="bi bi-box-arrow-right"></i> Logout
+      </a>
+    </nav>
+  </aside>
+
+  <main class="admin-content">
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <a href="{{ url_for('admin_products') }}" class="btn btn-sm"
+         style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.8rem;">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+      <h2 style="font-weight:800;color:var(--dark);margin:0;">
+        {% if product %}Edit Product{% else %}Add New Product{% endif %}
+      </h2>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- Form -->
+      <div class="col-lg-7">
+        <div class="form-card">
+          <form method="POST"
+                action="{{ url_for('admin_edit_product', pid=product.id) if product else url_for('admin_add_product') }}">
+
+            <div class="row g-3">
+
+              <div class="col-12">
+                <label class="form-label" for="name">Product Name <span class="text-danger">*</span></label>
+                <input type="text" id="name" name="name" class="form-control" required
+                       placeholder="e.g. Taro Milk Tea"
+                       value="{{ product.name if product else '' }}">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label" for="price">Price ($) <span class="text-danger">*</span></label>
+                <div style="position:relative;">
+                  <span style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-weight:700;">$</span>
+                  <input type="number" id="price" name="price" class="form-control"
+                         style="padding-left:1.8rem;" required step="0.01" min="0"
+                         placeholder="0.00"
+                         value="{{ '%.2f'|format(product.price) if product else '' }}">
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label" for="category_id">Category <span class="text-danger">*</span></label>
+                <select id="category_id" name="category_id" class="form-select" required>
+                  <option value="">Select category…</option>
+                  {% for cat in categories %}
+                  <option value="{{ cat.id }}"
+                    {% if product and product.category_id == cat.id %}selected{% endif %}>
+                    {{ cat.icon }} {{ cat.name }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label" for="description">Description</label>
+                <textarea id="description" name="description" class="form-control" rows="3"
+                          placeholder="Describe the drink, flavours, ingredients…">{{ product.description if product else '' }}</textarea>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label" for="image_url">Image URL</label>
+                <input type="url" id="image_url" name="image_url" class="form-control"
+                       placeholder="https://images.unsplash.com/…"
+                       value="{{ product.image_url if product else '' }}"
+                       oninput="document.getElementById('img-preview').src=this.value||'https://via.placeholder.com/200x150?text=No+Image'">
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-check form-switch mt-2">
+                  <input class="form-check-input" type="checkbox" id="is_available" name="is_available"
+                         style="width:2.5rem;height:1.3rem;"
+                         {% if not product or product.is_available %}checked{% endif %}>
+                  <label class="form-check-label ms-2 fw-bold" for="is_available">Available for Order</label>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-check form-switch mt-2">
+                  <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured"
+                         style="width:2.5rem;height:1.3rem;"
+                         {% if product and product.is_featured %}checked{% endif %}>
+                  <label class="form-check-label ms-2 fw-bold" for="is_featured">Featured on Homepage</label>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="mt-4 pt-3 border-top d-flex justify-content-between">
+              <a href="{{ url_for('admin_products') }}" class="btn-outline-custom" style="padding:0.6rem 1.2rem;">
+                Cancel
+              </a>
+              <button type="submit" class="btn-primary-custom" style="padding:0.7rem 2rem;">
+                <i class="bi bi-check2-circle me-1"></i>
+                {% if product %}Save Changes{% else %}Add Product{% endif %}
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div class="col-lg-5">
+        <div class="form-card">
+          <h6 style="font-weight:800;margin-bottom:1.2rem;color:var(--dark);">Image Preview</h6>
+          <img id="img-preview"
+               src="{{ product.image_url if product and product.image_url else 'https://via.placeholder.com/300x200?text=No+Image' }}"
+               alt="Preview"
+               style="width:100%;height:220px;object-fit:cover;border-radius:var(--radius-sm);">
+
+          <div style="margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid var(--border);">
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.5rem;">💡 Tip: Use Unsplash for free images:</p>
+            <code style="font-size:0.75rem;background:var(--surface-2);padding:0.4rem 0.6rem;border-radius:6px;display:block;word-break:break-all;">
+              https://images.unsplash.com/photo-XXXX?w=400&q=80
+            </code>
+          </div>
+
+          {% if product %}
+          <div style="margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid var(--border);">
+            <a href="{{ url_for('product_detail', pid=product.id) }}" target="_blank"
+               class="btn-outline-custom w-100 justify-content-center" style="padding:0.55rem;">
+              <i class="bi bi-eye me-1"></i> View on Store
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+{% endblock %}
