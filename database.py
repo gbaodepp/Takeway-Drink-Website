@@ -1,3 +1,4 @@
+import os
 import hashlib
 from flask_sqlalchemy import SQLAlchemy
 
@@ -13,7 +14,14 @@ def init_db(app):
     # Import models here to avoid circular imports
     from models import Category, Product, User
 
+    # Warn if running on Render (SQLite data is ephemeral on free tier)
+    if os.environ.get('RENDER'):
+        print('[WARNING] Running on Render — SQLite data resets on every deploy/restart.')
+        print('[WARNING] Consider switching to PostgreSQL for persistent storage.')
+
     db.create_all()
+    print('[DB] Tables created (or already exist).')
+
 
     # ── Seed Categories ──────────────────────────────────────────────────────
     if Category.query.count() == 0:

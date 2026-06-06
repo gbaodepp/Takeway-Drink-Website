@@ -18,6 +18,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
+# ── Bootstrap DB (runs for both `python app.py` AND gunicorn) ────────────────
+with app.app_context():
+    init_db(app)
+
 
 # ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -359,6 +363,4 @@ def api_cart_count():
 # ─── Run ─────────────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
-    with app.app_context():
-        init_db(app)
     app.run(debug=True, port=5000)
